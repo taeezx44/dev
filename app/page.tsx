@@ -8,26 +8,31 @@ import PostCard from "@/components/blog/PostCard";
 import Button from "@/components/ui/Button";
 
 async function getData() {
-  const [courses, posts, topUsers] = await Promise.all([
-    db.course.findMany({
-      where: { published: true },
-      include: { tags: true, _count: { select: { lessons: true, enrollments: true } } },
-      take: 3,
-      orderBy: { createdAt: "desc" },
-    }),
-    db.post.findMany({
-      where: { published: true },
-      include: { tags: true, _count: { select: { comments: true } } },
-      take: 3,
-      orderBy: { createdAt: "desc" },
-    }),
-    db.user.findMany({
-      select: { id: true, name: true, points: true },
-      orderBy: { points: "desc" },
-      take: 5,
-    }),
-  ]);
-  return { courses, posts, topUsers };
+  try {
+    const [courses, posts, topUsers] = await Promise.all([
+      db.course.findMany({
+        where: { published: true },
+        include: { tags: true, _count: { select: { lessons: true, enrollments: true } } },
+        take: 3,
+        orderBy: { createdAt: "desc" },
+      }),
+      db.post.findMany({
+        where: { published: true },
+        include: { tags: true, _count: { select: { comments: true } } },
+        take: 3,
+        orderBy: { createdAt: "desc" },
+      }),
+      db.user.findMany({
+        select: { id: true, name: true, points: true },
+        orderBy: { points: "desc" },
+        take: 5,
+      }),
+    ]);
+    return { courses, posts, topUsers };
+  } catch (error) {
+    console.error("Database fetch error:", error);
+    return { courses: [], posts: [], topUsers: [] };
+  }
 }
 
 export default async function HomePage() {
