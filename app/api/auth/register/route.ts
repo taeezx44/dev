@@ -41,10 +41,14 @@ export async function POST(req: Request) {
       { message: "สมัครสมาชิกสำเร็จ", userId: user.id },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Register error:", error);
+    const errorMessage = error?.message?.includes("connect") 
+      ? "เชื่อมต่อฐานข้อมูลไม่ได้" 
+      : (error?.code === "P2021" ? "ยังไม่ได้สร้างตารางในฐานข้อมูล" : "เกิดข้อผิดพลาดในระบบ");
+    
     return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในระบบ" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
