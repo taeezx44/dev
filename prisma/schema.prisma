@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("USER")
+  avatar      String?
+  points      Int          @default(0)
+  createdAt   DateTime     @default(now())
+  enrollments Enrollment[]
+  progress    Progress[]
+  comments    Comment[]
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  description String
+  thumbnail   String?
+  level       CourseLevel  @default(BEGINNER)
+  published   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  lessons     Lesson[]
+  enrollments Enrollment[]
+  tags        Tag[]
+}
+
+model Lesson {
+  id       String     @id @default(cuid())
+  courseId  String
+  title    String
+  content  String
+  videoUrl String?
+  order    Int
+  course   Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress Progress[]
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  userId     String
+  courseId    String
+  enrolledAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Progress {
+  id        String  @id @default(cuid())
+  userId    String
+  lessonId  String
+  completed Boolean @default(false)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson    Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  title     String
+  slug      String    @unique
+  content   String
+  thumbnail String?
+  published Boolean   @default(false)
+  authorId  String
+  createdAt DateTime  @default(now())
+  tags      Tag[]
+  comments  Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Tag {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  courses Course[]
+  posts   Post[]
+}
